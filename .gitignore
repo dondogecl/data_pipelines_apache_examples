@@ -3,3 +3,6 @@ env/
 github_datapipelines
 *.pub
 *.keys
+data/*
+sample_data.txt
+*.log
