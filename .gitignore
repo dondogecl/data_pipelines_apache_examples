@@ -6,3 +6,6 @@ github_datapipelines
 data/*
 sample_data.txt
 *.log
+input/
+output/
+.ipynb_checkpoints/
