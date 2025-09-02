@@ -30,7 +30,7 @@ logging.basicConfig(
 logger = logging.getLogger()
 
 # Setting the threshold of logger to DEBUG
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 logging.info("==========")
 logging.info("starting a new notebook execution")
 
@@ -83,8 +83,23 @@ def main(argv=None):
     logging.debug(f"Pipeline options initialized as: input={options.input}")
     logging.debug(f"output={options.output} - Platform:{options.platform}")
 
+    # Pipeline in memory
     with beam.Pipeline(options=options) as pipeline:
-        pass
+        lines = (
+            pipeline
+            | beam.Create([
+                "A singular fatality has ruled the destiny of nearly all the most",
+                "famous of Leonardo da Vinci's works. Two of the three most important",
+                "were never completed, obstacles having arisen during his life-time,",
+                "which obliged him to leave them unfinished; namely the Sforza",
+                "Monument and the Wall-painting of the Battle of Anghiari, while the",
+                "third--the picture of the Last Supper at Milan--has suffered",
+                "irremediable injury from decay and the repeated restorations to",
+                "which it was recklessly subjected during the XVIIth and XVIIIth",
+                "centuries."
+            ])
+            | beam.Map(print)
+        )
 
 
 # In[5]:
