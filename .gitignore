@@ -9,3 +9,6 @@ sample_data.txt
 input/
 output/
 .ipynb_checkpoints/
+iceberg_catalog/
+*.db
+*.parquet
