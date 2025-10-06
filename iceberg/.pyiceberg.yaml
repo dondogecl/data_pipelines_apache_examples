@@ -1,4 +1,4 @@
 catalog:
   local:
-    uri: sqlite:///iceberg_catalog/catalog.db
-    warehouse: file:///iceberg_catalog
+    uri: sqlite:////mnt/c/dev/data_pipelines_apache_examples/iceberg/iceberg_catalog/catalog.db
+    warehouse: file:////mnt/c/dev/data_pipelines_apache_examples/iceberg/iceberg_catalog
