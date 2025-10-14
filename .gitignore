@@ -13,3 +13,4 @@ iceberg_catalog/
 *.db
 *.parquet
 env_iceberg/
+sample_data/
