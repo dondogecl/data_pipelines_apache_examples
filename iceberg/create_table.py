@@ -37,7 +37,7 @@ if __name__ == "__main__":
         schema=product_schema
     )
 
-    # Define data to feed our table
+    # Define data to feed our table  
     product_data = pa.Table.from_pylist([
     {"ProductId": 1, "Name": "Bleach", "Category": "Manga", "Price": 9.99, "Stock": 102, "IsActive": True},
     {"ProductId": 2, "Name": "One Piece", "Category": "Manga", "Price": 11.49, "Stock": 250, "IsActive": True},
