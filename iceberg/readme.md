@@ -12,8 +12,9 @@ The simplified architecture is:
 4. Parquet are appended into the Bronze Bucket under a folder name for the table in the format YYYY/MM/DD/
 5. The pipeline then triggers a job to load into the Silver Area, which is Iceberg Tables in GCP (BigQuery managed Iceberg). We will have both a Silver bucket and the proper dataset for testing. The transformation is minimal
 6. We apply some data quality rules into the Silver transformation process
-7. All the stages are monitored in a monitoring_tracking table (name TBD) with timestamps, records created, status (SUCCESS, FAILED, etc), and batch_id of the extraction
-8. Gold transformation should happen in BQ but it is TBD at this moment
+7. The ingestion pattern into silver will be append.
+8. All the stages are monitored in a monitoring_tracking table (name TBD) with timestamps, records created, status (SUCCESS, FAILED, etc), and batch_id of the extraction
+9. Gold transformation should happen in BQ but it is TBD at this moment
 
 ## Testing
 
@@ -34,6 +35,7 @@ We have the following tech stack:
 
 ## Project Structure
 
+```
 root/
 |-  airflow/
 |   |-  1_bronze_only_pipeline.py
@@ -49,17 +51,91 @@ root/
 |-  tests/
 |-  ../env_iceberg/
 |-  .env
+```
 
 Only in the local environment we have a python venv and the .env files.
 
+## Project
+
+We should use when possible variables, such as PROJECT_ID to avoid hard-coding values. The project used is considered a testing/development environment.
+
+The code for the project is saved to github, so we should be careful with the names of resources.
+
+We should also follow Iceberg practices, so it will probably be wise to use a folder for each table to keep the bronze layer organized.
+
 ## Locations
 
-Bronze Bucket:
+**Bronze:**
+- $BRONZE_BUCKET
 
-- gs://bronze-mindful-silo-469119-r1
+**Silver:**
+- $SILVER_BUCKET
+- $SILVER_DATASET
 
-Silver bucket:
-- gs://silver-mindful-silo-469119-r1
+**Gold bucket:**
+- $GOLD_BUCKET (will be in BQ so we don't know it a bucket will be necessary)
+- $GOLD_DATASET
 
-Gold bucket:
-- TBD (will be in BQ so we don't know it a bucket will be necessary)
+## Permissions
+
+Service account for Cloud Composer:
+
+```
+gcloud iam service-accounts create composer-sa \
+  --description="Service Account for Cloud Composer environment" \
+  --display-name="composer-sa"
+```
+
+Permissions and roles:
+
+The following permissions exist for the local testing account ("airflow-local") and the cloud composer account ("composer-sa"). We will develop using local airflow to avoid high costs, but the final test will be using an actual Cloud Composer environment.
+
+$SA_NAME= depends on the stage of development
+
+```
+# Composer worker role
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$SA_NAME@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/composer.worker"
+
+# Composer env + storage admin
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$SA_NAME@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/composer.environmentAndStorageObjectAdmin"
+
+# GCS object admin (for DAGs/logs/Xcom)
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$SA_NAME@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/storage.objectAdmin"
+
+# Cloud Logging writer
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$SA_NAME@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/logging.logWriter"
+
+# (Optional but best practice) Allow it to use/impersonate other SAs
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$SA_NAME@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/iam.serviceAccountUser"
+
+# Optional/ Could be in other SA being impersonated:
+
+# BigQuery User
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$SA_NAME@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/bigquery.user"
+
+# Dataproc Editor
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$SA_NAME@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/dataproc.editor"
+
+gcloud projects add-iam-policy-binding mindful-silo-469119-r1 \
+  --member="serviceAccount:$DATAPROC_SA" \
+  --role="roles/dataproc.editor"
+```
+
+## Orchestrator
+
+Locally we can use Airflow which runs via Docker Compose. By default, using the port 8080.
+We can place our DAGs in the airflow subfolder and a batch script will copy it to the real DAGs folder.

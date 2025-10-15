@@ -14,3 +14,12 @@ iceberg_catalog/
 *.parquet
 env_iceberg/
 sample_data/
+submit_job.sh
+submit_bronze.sh
+example_submit.sh
+bronze_job.yaml
+pipeline_config.yaml
+.env
+env/
+iceberg_catalog/
+
