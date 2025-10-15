@@ -1,0 +1,100 @@
+# Data Pipeline .gitignore Template
+# Copy this to .gitignore and customize for your project
+
+# Configuration files with real credentials
+config/pipeline_config_local.yaml
+config/pipeline_config_dev.yaml
+config/pipeline_config_prod.yaml
+pyspark/bronze_job.yaml
+pyspark/silver_job.yaml
+
+# Environment files
+.env
+.env.local
+.env.dev
+.env.prod
+pyspark/.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+../env_iceberg/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+/tmp/
+
+# Airflow
+airflow.cfg
+airflow.db
+airflow-webserver.pid
+logs/
+
+# GCP
+*.json
+service-account-*.json
+credentials.json
+
+# Data files (if needed)
+sample_data/*.csv
+data/
+*.parquet
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Add your specific files here
+# my_real_config.yaml
+# production_secrets.yaml

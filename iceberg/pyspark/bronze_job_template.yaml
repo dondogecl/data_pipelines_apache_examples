@@ -1,0 +1,50 @@
+# Template for Bronze Ingestion Dataproc Serverless Job
+# Copy this file to bronze_job.yaml and replace placeholder values with your actual configuration
+
+apiVersion: dataproc.googleapis.com/v1
+kind: Batch
+metadata:
+  name: dataproc-serverless-bronze-TIMESTAMP
+spec:
+  pysparkBatch:
+    mainPythonFileUri: "gs://YOUR_DEPS_BUCKET/bronze_ingestion.py"
+    args:
+      - "--project_id=YOUR_PROJECT_ID"
+      - "--landing_bucket=YOUR_LANDING_BUCKET"
+      - "--bronze_bucket=YOUR_BRONZE_BUCKET"
+      - "--source_file=YOUR_SOURCE_FILE.csv"
+      - "--table_name=YOUR_TABLE_NAME"
+      - "--environment=yaml-config"
+    pythonFileUris: []
+    jarFileUris: []
+    fileUris: []
+    archiveUris: []
+  runtimeConfig:
+    version: "2.1"
+    properties:
+      "spark.sql.adaptive.enabled": "true"
+      "spark.sql.adaptive.coalescePartitions.enabled": "true"
+  environmentConfig:
+    executionConfig:
+      serviceAccount: "YOUR_DATAPROC_SA@YOUR_PROJECT_ID.iam.gserviceaccount.com"
+      subnetworkUri: "projects/YOUR_PROJECT_ID/regions/YOUR_REGION/subnetworks/YOUR_DATAPROC_SUBNET"
+      networkTags: []
+    peripheralsConfig:
+      sparkHistoryServerConfig:
+        dataprocCluster: ""
+  labels:
+    job-type: "bronze-ingestion"
+    data-pipeline: "iceberg-demo"
+    environment: "dev"
+    table: "YOUR_TABLE_NAME"
+
+# Configuration Guide:
+# 1. Replace YOUR_PROJECT_ID with your GCP project ID
+# 2. Replace YOUR_DEPS_BUCKET with your dependencies bucket name
+# 3. Replace YOUR_LANDING_BUCKET with your landing bucket name
+# 4. Replace YOUR_BRONZE_BUCKET with your bronze bucket name
+# 5. Replace YOUR_SOURCE_FILE.csv with your actual source file name
+# 6. Replace YOUR_TABLE_NAME with your target table name
+# 7. Replace YOUR_DATAPROC_SA with your Dataproc service account name
+# 8. Replace YOUR_REGION with your GCP region (e.g., us-central1)
+# 9. Replace YOUR_DATAPROC_SUBNET with your subnet name
