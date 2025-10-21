@@ -1,0 +1,59 @@
+Configure the Iceberg catalog (Dataproc Serverless --properties), pointing at the BigQuery Metastore and your warehouse path in GCS:
+
+```
+gcloud dataproc batches submit pyspark silver_job.py \
+  --project=$PROJECT_ID \
+  --region=$REGION \
+  --deps-bucket=$DEPS_BUCKET \
+  --version=2.2 \
+  --properties="\
+spark.sql.catalog.icecat=org.apache.iceberg.spark.SparkCatalog,\
+spark.sql.catalog.icecat.catalog-impl=org.apache.iceberg.gcp.bigquery.BigQueryMetastoreCatalog,\
+spark.sql.catalog.icecat.gcp_project=$PROJECT_ID,\
+spark.sql.catalog.icecat.gcp_location=$BQ_LOCATION,\
+spark.sql.catalog.icecat.warehouse=gs://$SILVER_BUCKET/warehouse"
+```
+
+Example target of iceberg:
+
+```
+import os
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.getOrCreate()
+
+catalog = "icecat"
+ns      = os.environ["SILVER_DATASET"]     # e.g. "silver"
+table   = os.environ["SILVER_TABLE"]       # e.g. "orders"
+
+# Ensure the namespace exists (no-op if it does)
+spark.sql(f"USE `{catalog}`")
+spark.sql(f"CREATE NAMESPACE IF NOT EXISTS `{ns}`")
+
+# If the table doesn't exist yet, you can create it once via Spark SQL:
+# spark.sql(f"CREATE TABLE `{ns}`.`{table}` ( ... ) USING ICEBERG")
+
+target = f"{catalog}.{ns}.{table}"
+
+# df_silver = your transformed DataFrame
+# Recommended: use the V2 API so the catalog is respected
+df_silver.writeTo(target).append()   # or .overwritePartitions() if you’re partitioned
+```
+
+Option 2:
+
+```
+-- In BigQuery (GoogleSQL):
+CREATE TABLE `${PROJECT_ID}.${SILVER_DATASET}.${SILVER_TABLE}` (
+  -- your schema
+  id INT64,
+  -- ...
+)
+WITH CONNECTION `${PROJECT_ID}.${BQ_LOCATION}.${CONNECTION_NAME}`
+OPTIONS (
+  table_format = 'ICEBERG',
+  file_format  = 'PARQUET',
+  storage_uri  = 'gs://${SILVER_BUCKET}/${SILVER_DATASET}/${SILVER_TABLE}'
+);
+
+```
