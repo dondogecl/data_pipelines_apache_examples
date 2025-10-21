@@ -57,3 +57,70 @@ OPTIONS (
 );
 
 ```
+
+
+Submit example with Python:
+
+```
+def trigger_dataproc(config: Config) -> bool:
+    """Triggers the Dataproc Serverless job after preprocessing.
+        It sends the folder which contains the subfolders of
+        pre-processed parquet data that will be used by Spark
+    """
+    try:
+        script_path = f"gs://{config.PARQUET_BUCKET}/scripts/{config.SPARK_JOB}"
+        batch_id = f"dataproc-obt-{uuid.uuid4().hex[:8]}"
+        url = f"https://dataproc.googleapis.com/v1/projects/{config.PROJECT_ID}/locations/{config.REGION}/batches?batchId={batch_id}"
+        
+        request_body = {
+            "runtimeConfig": {"version": "1.2"},
+            "environmentConfig": {
+                "executionConfig": {
+                    "serviceAccount": config.SERVICE_ACCOUNT,
+                    "subnetworkUri": f"projects/{config.VPC_PROJECT}/regions/{config.REGION}/subnetworks/{config.VPC_SUBNET}"
+                }
+            },
+            "pyspark_batch": {
+                "mainPythonFileUri": script_path,
+                "args": [
+                    "--environment=dataproc",
+                    f"--project_id={config.PROJECT_ID}",
+                    f"--region={config.REGION}",
+                    f"--dataset_id={config.DATASET_ID}",
+                    f"--snapshot_table={config.SNAPSHOT_TABLE}",
+                    f"--staging_table={config.STAGING_TABLE}",
+                    f"--batch_tracking_table={config.BATCH_TRACKING_TABLE}",
+                    f"--updates_log_table={config.UPDATES_LOG_TABLE}",
+                    f"--metrics_table={config.METRICS_TABLE}",
+                    f"--temp_bucket={config.TEMP_BUCKET}",
+                    f"--source_bucket={config.PARQUET_BUCKET}",
+                    f"--source_path={config.PARQUET_PATH}",
+                    f"--manual_mode={config.MANUAL_MODE}",
+                    f"--month={config.MANUAL_MONTH}",
+                ],
+                "jarFileUris" : [
+                    "gs://spark-lib/bigquery/spark-3.5-bigquery-0.42.0.jar"
+                ]
+            },
+            "labels": {
+                "goog-dataproc-batch-id": batch_id
+            }            
+        }
+
+        token = get_auth_token()
+        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json; charset=utf-8"}
+        response = requests.post(url, headers=headers, json=request_body)
+        
+        if response.status_code != 200:
+            logging.error(f"Dataproc submission failed: {response.text}")
+            return False
+
+        logging.info(f"Dataproc job {batch_id} triggered successfully.")
+        return True
+
+    except Exception as e:
+        logging.error(f"Error triggering Dataproc: {e}")
+        logging.info(f"Request Body detail: {request_body}")
+        return False
+
+```
