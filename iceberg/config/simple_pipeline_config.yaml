@@ -1,0 +1,58 @@
+# Simple Pipeline Configuration
+# This is a minimal configuration to get started with Airflow + Dataproc
+# You can expand this later as you understand each piece
+
+# ============================================================================
+# STEP 1: GCP Project Settings
+# ============================================================================
+project_id: "mindful-silo-469119-r1"  # Your GCP project ID
+region: "us-central1"                  # Region where Dataproc will run
+
+# ============================================================================
+# STEP 2: Storage Buckets
+# ============================================================================
+# These are GCS buckets for different stages of your data pipeline
+buckets:
+  landing: "landing-mindful-silo-469119-r1"  # Where raw CSV files arrive
+  bronze: "bronze-mindful-silo-469119-r1"    # Where Parquet files are stored
+  silver: "silver-mindful-silo-469119-r1"    # Where transformed/cleaned data is stored
+  deps: "deps-mindful-silo-469119-r1"        # Where Python scripts are stored
+
+# ============================================================================
+# STEP 3: Dataproc Configuration
+# ============================================================================
+# Settings for running Spark jobs on Dataproc Serverless
+dataproc:
+  service_account: "DATAPROC_SA@mindful-silo-469119-r1.iam.gserviceaccount.com"
+  subnet: "projects/mindful-silo-469119-r1/regions/us-central1/subnetworks/DATAPROC_SUBNET"
+  version: "2.1"  # Dataproc runtime version
+
+# ============================================================================
+# STEP 4: Table Configuration
+# ============================================================================
+# Define your data table - what file to process and where to put it
+table:
+  source_file: "global_population_stats_2024.csv"  # CSV file in landing bucket
+  table_name: "population_stats"                    # Output table name
+
+# ============================================================================
+# STEP 5: Airflow Schedule
+# ============================================================================
+# When and how often should this pipeline run?
+schedule:
+  cron: "0 2 * * *"  # Run daily at 2 AM UTC (cron format)
+  # Cron format: minute hour day month day_of_week
+  # Examples:
+  #   "0 2 * * *"     = Daily at 2 AM
+  #   "0 */6 * * *"   = Every 6 hours
+  #   "0 2 * * 1"     = Every Monday at 2 AM
+  #   "@daily"        = Once per day at midnight
+
+# ============================================================================
+# HOW TO USE THIS CONFIG:
+# ============================================================================
+# 1. Update the project_id and bucket names with your actual GCP values
+# 2. Update the service_account and subnet with your Dataproc settings
+# 3. Change the source_file and table_name for your data
+# 4. Adjust the schedule cron expression for your needs
+# 5. Place this file in the config/ folder of your Airflow DAGs directory
