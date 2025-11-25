@@ -1,5 +1,6 @@
 .env
 env/
+.venv/
 github_datapipelines
 *.pub
 *.keys
