@@ -22,3 +22,4 @@ dbinit.py
 initdb.py
 secrets/py
 airflow.db
+__pycache__/
