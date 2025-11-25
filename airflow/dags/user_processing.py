@@ -1,5 +1,6 @@
 from airflow.sdk import dag, task
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+from airflow.providers.standard.operators.python import PythonOperator
 from airflow.sdk.bases.sensor import PokeReturnValue
 import logging
 import requests
@@ -23,6 +24,25 @@ CREATE TABLE IF NOT EXISTS users (
 
 api_endpoint = "https://raw.githubusercontent.com/marclamberti/datasets/refs/heads/main/fakeuser.json"
 
+# Functions
+def _extract_user(ti):
+    """Gets the user from the API data inside the JSON payload"""
+    try:
+        fake_user = ti.xcom_pull(task_ids="is_api_available")
+        logging.debug(f"Extracted user: {fake_user}")
+    except Exception as e:
+        logging.error(f"Error trying to extract user from message, details: {e}")
+        raise
+
+    return {
+        "id": fake_user["id"],
+        "firstname": fake_user["personalInfo"]["firstName"],
+        "lastname": fake_user["personalInfo"]["lastName"],
+        "email": fake_user["personalInfo"]["email"]
+    }
+
+
+# DAG
 
 @dag
 def user_processing():
@@ -48,6 +68,12 @@ def user_processing():
             logging.warning(f"REQUEST FAILED. STATUS CODE {status_code}")
             fake_user = None
         return PokeReturnValue(is_done=condition, xcom_value=fake_user)
+
+    
+    extract_user = PythonOperator(
+        task_id="extract_user",
+        python_callable=_extract_user
+    )
 
 
     # declare task
