@@ -13,3 +13,12 @@ output/
 iceberg_catalog/
 *.db
 *.parquet
+
+# Airflow
+airflow.cfg
+logs/*
+airflow_login.py
+dbinit.py
+initdb.py
+secrets/py
+airflow.db
